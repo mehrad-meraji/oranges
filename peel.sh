@@ -31,8 +31,8 @@ if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
 EOD
 fi
 
-# Non-Chef Homebrew install
+# Homebrew install
 brew --version
 [ ! -x "$(which brew)" -a "$?" -eq 0 ] || /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
-(echo; echo 'eval "$(/opt/homebrew/bin/brew shellenv)"') >> ~/.zprofile
-eval "$(/opt/homebrew/bin/brew shellenv)"
+
+brew install ansible
