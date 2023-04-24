@@ -43,7 +43,7 @@ source ~/.zprofile
 
 BW_STATUS=$(bw status | jq -r '.status')
 
-if [! $BW_STATUS == 'unauthenticated']; then
+if [! $BW_STATUS == 'unauthenticated' || $BW_SESSION == '' ]; then
 	# Login to BitWarden Vault
 	BW_SESSION="$(bw login --raw)"
 fi
