@@ -36,8 +36,10 @@ fi
 
 # Homebrew install
 brew --version
-[ ! -x "$(which brew)" -a "$?" -eq 0 ] || /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
-echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
+if [ ! -x "$(which brew)" -a "$?" -eq 0 ]; then 
+	/bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
+	echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
+fi
 
 brew install jq ansible bitwarden-cli
 source ~/.zprofile
