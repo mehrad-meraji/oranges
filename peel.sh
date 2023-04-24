@@ -41,9 +41,9 @@ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zpr
 brew install jq ansible bitwarden-cli
 source ~/.zprofile
 
-BW_STATUS=$(bw status | jq -r '.status')
+BW_STATUS=$(bw status | jq -r ".status")
 
-if [ $BW_STATUS == 'unauthenticated' || $BW_SESSION == '' ]; then
+if [ $BW_STATUS == "unauthenticated" ]; then
 	# Login to BitWarden Vault
 	BW_SESSION="$(bw login --raw)"
 fi
