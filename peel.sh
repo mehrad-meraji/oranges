@@ -45,7 +45,8 @@ BW_STATUS=$(bw status | jq -r ".status")
 
 if [ $BW_STATUS == "unauthenticated" ]; then
 	# Login to BitWarden Vault
-	BW_SESSION="$(bw login --raw)"
+	echo "export BW_SESSION=$(bw login --raw)" >> ~/.zprofile
+	source ~/.zprofile
 fi
 
 eval "$(ssh-agent -s)"
