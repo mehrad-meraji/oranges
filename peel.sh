@@ -43,9 +43,16 @@ brew install ansible bitwarden-cli
 # Login to BitWarden Vault
 BW_SESSION="$(bw login --raw)"
 
-# Add private ssh key
-KEY="$(bw get notes ssh --session $BW_SESSION)"
-mkdir ~/.ssh
-touch ~/private_rsa
-echo $KEY >> private_rsa
+eval "$(ssh-agent -s)"
+PRIVATE_SSH_KEY="private_rsa"
+PRIVATE_SSH_LOC="~/.ssh/$PRIVATE_SSH_KEY"
+if [ ! -f "$PRIVATE_SSH_LOC" ]; then
+	# Add private ssh key
+	KEY="$(bw get notes ssh --session $BW_SESSION)"
+	mkdir ~/.ssh
+	touch "$PRIVATE_SSH_LOC"
+	echo $KEY >> "$PRIVATE_SSH_KEY"
+fi
+
+ssh-add --apple-use-keychain "$PRIVATE_SSH_LOC"
 
