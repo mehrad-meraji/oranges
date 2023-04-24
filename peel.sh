@@ -38,10 +38,15 @@ brew --version
 [ ! -x "$(which brew)" -a "$?" -eq 0 ] || /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
 echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
 
-brew install ansible bitwarden-cli
+brew install jq ansible bitwarden-cli
+source ~/.zprofile
 
-# Login to BitWarden Vault
-BW_SESSION="$(bw login --raw)"
+BW_STATUS=$(bw status | jq -r '.status')
+
+if [! $BW_STATUS == 'unauthenticated']; then
+	# Login to BitWarden Vault
+	BW_SESSION="$(bw login --raw)"
+fi
 
 eval "$(ssh-agent -s)"
 PRIVATE_SSH_KEY="private_rsa"
