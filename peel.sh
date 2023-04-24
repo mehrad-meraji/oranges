@@ -44,8 +44,8 @@ brew install ansible bitwarden-cli
 BW_SESSION="$(bw login --raw)"
 
 # Add private ssh key
-KEY="$(bw get notes ssh)"
+KEY="$(bw get notes ssh --session $BW_SESSION)"
 mkdir ~/.ssh
-touch private_rsa
-echo KEY >> private_rsa
+touch ~/private_rsa
+echo $KEY >> private_rsa
 
