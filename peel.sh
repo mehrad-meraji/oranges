@@ -40,5 +40,12 @@ echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zpr
 
 brew install ansible bitwarden-cli
 
-# login to BitWarden Vault
-bw login
+# Login to BitWarden Vault
+BW_SESSION="$(bw login --raw)"
+
+# Add private ssh key
+KEY="$(bw get note ssh)"
+mkdir ~/.ssh
+touch private_rsa
+echo KEY >> private_rsa
+
