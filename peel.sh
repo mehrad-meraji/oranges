@@ -38,4 +38,7 @@ brew --version
 [ ! -x "$(which brew)" -a "$?" -eq 0 ] || /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
 echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
 
-brew install ansible
+brew install ansible bitwarden-cli
+
+# login to BitWarden Vault
+bw login
