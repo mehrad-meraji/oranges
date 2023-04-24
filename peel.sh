@@ -1,5 +1,6 @@
 HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
 
+touch ~/.zshenv
 touch ~/.zprofile
 
 ## Spawn sudo in background subshell to refresh the sudo timestamp
@@ -45,8 +46,7 @@ BW_STATUS=$(bw status | jq -r ".status")
 
 if [ $BW_STATUS == "unauthenticated" ]; then
 	# Login to BitWarden Vault
-	echo "export BW_SESSION=$(bw login --raw)" >> ~/.zprofile
-	source ~/.zprofile
+	echo "BW_SESSION=$(bw login --raw)" >> ~/.zshenv && source ~/.zshenv
 fi
 
 eval "$(ssh-agent -s)"
