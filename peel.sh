@@ -70,4 +70,5 @@ if [ ! -d ~/setup ]; then
 	git clone https://github.com/mehrad-meraji/new-mac-playbook.git setup
 fi
 
-
+ansible-galaxy install -r requirements.yml
+ansible-playbook main.yml --ask-become-pass
