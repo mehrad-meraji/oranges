@@ -64,3 +64,4 @@ fi
 
 ssh-add --apple-use-keychain $PRIVATE_SSH_LOC
 
+git clone https://github.com/mehrad-meraji/new-mac-playbook.git setup
