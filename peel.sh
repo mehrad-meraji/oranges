@@ -41,11 +41,6 @@ if ! type brew >/dev/null 2>/dev/null; then
 	echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
 fi
 
-# Install OH-MY-ZSH
-if ! type omz >/dev/null 2>/dev/null; then 
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-fi
-
 brew install jq ansible bitwarden-cli git
 brew tap microsoft/git
 brew install --cask git-credential-manager-core
@@ -79,3 +74,8 @@ cd ~/setup && {
 	ansible-galaxy install -r ~/setup/requirements.yml
 	ansible-playbook ~/setup/main.yml --ask-become-pass
 }
+
+# Install OH-MY-ZSH
+if ! type omz >/dev/null 2>/dev/null; then 
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
