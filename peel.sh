@@ -35,7 +35,9 @@ EOD
 fi
 
 # Install Rosetta
-/usr/sbin/softwareupdate --install-rosetta --agree-to-license
+if [[ $(uname -m) == 'arm64' ]]; then
+	/usr/sbin/softwareupdate --install-rosetta --agree-to-license
+fi
 
 # Homebrew install
 brew --version
