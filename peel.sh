@@ -34,6 +34,9 @@ if [[ "$TRY_XCI_OSASCRIPT_FIRST" == '1' ]]; then
 EOD
 fi
 
+# Install Rosetta
+/usr/sbin/softwareupdate --install-rosetta --agree-to-license
+
 # Homebrew install
 brew --version
 if ! type brew >/dev/null 2>/dev/null; then 
