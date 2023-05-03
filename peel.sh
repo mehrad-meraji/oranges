@@ -77,5 +77,5 @@ cd ~/setup && {
 
 # Install OH-MY-ZSH
 if ! type omz >/dev/null 2>/dev/null; then 
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended --keep-zshrc
 fi
