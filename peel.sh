@@ -3,6 +3,8 @@ HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/maste
 touch ~/.zshenv
 touch ~/.zprofile
 
+source ~/.zprofile
+
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
   # Note: Don't use GNU expect... just a subshell (for some reason expect spawn jacks up readline input)
