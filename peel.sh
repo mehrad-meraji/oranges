@@ -84,5 +84,5 @@ fi
 
 cd ~/setup && {
 	ansible-galaxy install -r ~/setup/requirements.yml
-	ansible-playbook ~/setup/main.yml
+	ansible-playbook ~/setup/main.yml --ask-become-pass
 }
