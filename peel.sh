@@ -41,7 +41,9 @@ if ! type brew >/dev/null 2>/dev/null; then
 	echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
 fi
 
-brew install jq ansible bitwarden-cli
+brew install jq ansible bitwarden-cli git
+brew tap microsoft/git
+brew install --cask git-credential-manager-core
 source ~/.zprofile
 
 BW_STATUS=$(bw status | jq -r ".status")
