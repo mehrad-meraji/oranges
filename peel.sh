@@ -42,7 +42,7 @@ fi
 # Homebrew install
 brew --version
 if ! type brew >/dev/null 2>/dev/null; then 
-	/bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL" )"
+	NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL "$HOMEBREW_INSTALLER_URL")"
 	echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
 fi
 
