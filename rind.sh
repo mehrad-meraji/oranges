@@ -78,13 +78,9 @@ fi
 
 ssh-add --apple-use-keychain $PRIVATE_SSH_LOC
 
-if [ ! -d ~/setup ]; then
-	git clone https://github.com/mehrad-meraji/new-mac-playbook.git setup
+if [ ! -d ~/.configurations ]; then
+	git clone https://github.com/mehrad-meraji/dotfiles.git ~/.configurations
+  ~/.configurations/go.sh
 fi
-
-cd ~/setup && {
-	ansible-galaxy install -r ~/setup/requirements.yml
-	ansible-playbook ~/setup/main.yml --ask-become-pass --force
-}
 
 exec zsh -l
