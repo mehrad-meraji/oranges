@@ -50,13 +50,9 @@ fi
 
 brew install zsh jq ansible bitwarden-cli git
 brew tap microsoft/git
-brew install --cask git-credential-manager-core
-source ~/.zprofile
+brew install --cask git-credential-manager
 
-# Install OH-MY-ZSH
-if ! type omz >/dev/null 2>/dev/null; then 
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended --keep-zshrc
-fi
+source ~/.zprofile
 
 BW_STATUS=$(bw status | jq -r ".status")
 
@@ -81,6 +77,11 @@ ssh-add --apple-use-keychain $PRIVATE_SSH_LOC
 if [ ! -d ~/.configurations ]; then
 	git clone https://github.com/mehrad-meraji/dotfiles.git ~/.configurations
   ~/.configurations/go.sh
+fi
+
+# Install OH-MY-ZSH
+if ! type omz >/dev/null 2>/dev/null; then 
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended --keep-zshrc
 fi
 
 exec zsh -l
