@@ -1,9 +1,9 @@
 HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
 
-touch ~/.zshenv
-touch ~/.zprofile
+touch $HOME/.zshenv
+touch $HOME/.zprofile
 
-source ~/.zprofile
+source $HOME/.zprofile
 
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
@@ -48,14 +48,13 @@ if ! type brew >/dev/null 2>/dev/null; then
 	echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile
 fi
 
+. $HOME/.zprofile
 brew install zsh jq ansible bitwarden-cli git
 brew tap microsoft/git
 brew install --cask git-credential-manager
-
-source ~/.zprofile
+. $HOME/.zprofile
 
 BW_STATUS=$(bw status | jq -r ".status")
-
 if [ $BW_STATUS == "unauthenticated" ]; then
 	# Login to BitWarden Vault
 	echo "BW_SESSION=$(bw login --raw)" >> ~/.zshenv && source ~/.zshenv
@@ -63,16 +62,23 @@ fi
 
 eval "$(ssh-agent -s)"
 PRIVATE_SSH_KEY="private_rsa"
-PRIVATE_SSH_LOC="~/.ssh/$PRIVATE_SSH_KEY"
+PRIVATE_SSH_LOC="$HOME/.ssh/$PRIVATE_SSH_KEY"
 if [ ! -f $PRIVATE_SSH_LOC ]; then
 	# Add private ssh key
 	KEY="$(bw get notes ssh --session $BW_SESSION)"
-	mkdir ~/.ssh
+	mkdir $HOME/.ssh
 	touch $PRIVATE_SSH_LOC
 	echo $KEY >> $PRIVATE_SSH_LOC
 fi
-
 ssh-add --apple-use-keychain $PRIVATE_SSH_LOC
+
+GITHUB_USERNAME="$(bw get notes a351877d-b841-4323-8c12-b0750151a00d --session $BW_SESSION)"
+GITHUB_TOKEN="$(bw get notes 1372d340-bd72-4cdf-a458-afc700e924c8 --session $BW_SESSION)"
+
+git config --global credential.interactive false
+git config --global credential.ghe.contoso.com.provider github
+git config --global credential.gitHubAuthModes "pat"
+git credential-manager github login --username $GITHUB_USERNAME --pat $GITHUB_TOKEN --no-ui
 
 if [ ! -d ~/.configurations ]; then
 	git clone https://github.com/mehrad-meraji/dotfiles.git ~/.configurations
