@@ -3,7 +3,8 @@ HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/maste
 touch $HOME/.zshenv
 touch $HOME/.zprofile
 
-source $HOME/.zprofile
+. $HOME/.zshenv
+. $HOME/.zprofile
 
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
@@ -58,12 +59,10 @@ BW_STATUS=$(bw status | jq -r ".status")
 if [ $BW_STATUS == "unauthenticated" ]; then
 	# Login to BitWarden Vault
  	export BW_SESSION=$(bw login --raw)
-  	echo $BW_SESSION
 	echo "export BW_SESSION=$BW_SESSION" >> $HOME/.zshenv
 	. $HOME/.zshenv
 fi
 
-echo $BW_SESSION
 eval "$(ssh-agent -s)"
 PRIVATE_SSH_KEY="private_rsa"
 PRIVATE_SSH_LOC="$HOME/.ssh/$PRIVATE_SSH_KEY"
@@ -86,7 +85,7 @@ git credential-manager github login --username $GITHUB_USERNAME --pat $GITHUB_TO
 
 if [ ! -d ~/.configurations ]; then
 	git clone https://github.com/mehrad-meraji/dotfiles.git ~/.configurations
-  ~/.configurations/go.sh
+  	~/.configurations/go.sh
 fi
 
 # Install OH-MY-ZSH
