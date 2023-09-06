@@ -59,7 +59,8 @@ if [ $BW_STATUS == "unauthenticated" ]; then
 	# Login to BitWarden Vault
  	export BW_SESSION=$(bw login --raw)
   	echo $BW_SESSION
-	echo "export BW_SESSION=$BW_SESSION" >> ~/.zshenv && source ~/.zshenv
+	echo "export BW_SESSION=$BW_SESSION" >> $HOME/.zshenv
+	. $HOME/.zshenv
 fi
 
 echo $BW_SESSION
