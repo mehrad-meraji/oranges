@@ -52,12 +52,13 @@ fi
 brew install zsh jq ansible bitwarden-cli git
 brew tap microsoft/git
 brew install --cask git-credential-manager
-. $HOME/.zprofile
 
+. $HOME/.zprofile
 BW_STATUS=$(bw status | jq -r ".status")
 if [ $BW_STATUS == "unauthenticated" ]; then
 	# Login to BitWarden Vault
-	echo "BW_SESSION=$(bw login --raw)" >> ~/.zshenv && source ~/.zshenv
+ 	export BW_SESSION=$(bw login --raw)
+	echo "export BW_SESSION=$BW_SESSION" >> ~/.zshenv && source ~/.zshenv
 fi
 
 eval "$(ssh-agent -s)"
@@ -90,4 +91,5 @@ if ! type omz >/dev/null 2>/dev/null; then
 	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" --unattended --keep-zshrc
 fi
 
+. $HOME/.zprofile
 exec zsh -l
