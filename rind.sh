@@ -50,7 +50,7 @@ if ! type brew >/dev/null 2>/dev/null; then
 fi
 
 . $HOME/.zprofile
-brew install zsh jq ansible bitwarden-cli git
+brew install zsh jq bitwarden-cli git
 brew tap microsoft/git
 brew install --cask git-credential-manager
 
