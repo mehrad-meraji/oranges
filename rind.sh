@@ -54,7 +54,7 @@ if ! type brew >/dev/null 2>/dev/null; then
 fi
 
 . "$HOME/.zprofile"
-brew install zsh jq bitwarden-cli git
+brew install zsh jq bitwarden-cli git chezmoi
 brew tap microsoft/git
 brew install --cask git-credential-manager
 
@@ -89,4 +89,5 @@ git config --global credential.ghe.contoso.com.provider github
 git config --global credential.gitHubAuthModes "pat"
 git credential-manager github login --username "$GITHUB_USERNAME" --pat "$GITHUB_TOKEN" --no-ui
 
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "$GITHUB_USERNAME"
+# sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "$GITHUB_USERNAME"
+chezmoi init --apply "$GITHUB_USERNAME"
