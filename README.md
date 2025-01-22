@@ -2,5 +2,5 @@
 
 ## Usage
 ```bash
-sh -c "$(curl -fsSL 'https://meh-labs.ca/peel')"
+sh -c "$(curl -fsSL 'https://raw.githubusercontent.com/mehrad-meraji/oranges/refs/heads/main/rind.sh')"
 ```

@@ -62,7 +62,7 @@ BW_STATUS=$(bw status | jq -r ".status")
 if [ $BW_STATUS == "unauthenticated" ]; then
   # Login to BitWarden Vault
   export BW_SESSION=$(bw login --raw)
-  echo "export BW_SESSION=$BW_SESSION" >>"$HOME"/.zshenv
+  echo "export BW_SESSION=$BW_SESSION" >"$HOME"/.zshenv
 fi
 . "$HOME/.zshenv"
 
@@ -74,7 +74,7 @@ if [ ! -f "$PRIVATE_SSH_LOC" ]; then
   KEY=$(bw get notes f74e0e9c-51bc-440a-8870-afee00ffd9be --session "$BW_SESSION")
   mkdir "$HOME"/.ssh
   touch "$PRIVATE_SSH_LOC"
-  echo "$KEY" >>"$PRIVATE_SSH_LOC"
+  echo "$KEY" >"$PRIVATE_SSH_LOC"
 fi
 # Set proper permissions for the key file
 chmod 400 "$PRIVATE_SSH_LOC"
