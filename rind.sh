@@ -1,3 +1,4 @@
+TRY_XCI_OSASCRIPT_FIRST='1'
 HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
 
 touch $HOME/.zshenv
