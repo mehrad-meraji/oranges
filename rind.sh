@@ -87,7 +87,7 @@ GITHUB_TOKEN=$(bw get notes 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_
 git config --global credential.interactive false
 git config --global credential.ghe.contoso.com.provider github
 git config --global credential.gitHubAuthModes "pat"
-git credential-manager github login --username "$GITHUB_USERNAME" --pat "$GITHUB_TOKEN" --no-ui
+git credential-manager github login --username "$GITHUB_USERNAME" --pat "$GITHUB_TOKEN" --no-ui --force
 
 # sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "$GITHUB_USERNAME"
 chezmoi init --apply "$GITHUB_USERNAME"
