@@ -93,7 +93,7 @@ fi
 ssh-add --apple-use-keychain "$PRIVATE_SSH_LOC"
 
 # Get GitHub credentials from BitWarden
-GITHUB_USERNAME=$(bw get notes a351877d-b841-4323-8c12-b0750151a00d --session "$BW_SESSION")
+GITHUB_USERNAME=mehrad-meraji
 GITHUB_TOKEN=$(bw get notes 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION")
 
 # Configure git credentials (git-credential-manager will be installed by chezmoi)
@@ -102,21 +102,5 @@ git config --global credential.ghe.contoso.com.provider github
 git config --global credential.gitHubAuthModes "pat"
 
 # Initialize chezmoi with private dotfiles repo
-# This will:
-#  - Clone the private dotfiles repository
-#  - Install ~80 Homebrew packages and ~20 casks from homebrew-packages.toml
-#  - Install Fish shell and set it as default
-#  - Install Fish plugins via Fisher
-#  - Apply all dotfile configurations
-#  - Link Karabiner and Neovim configs
 echo "Initializing chezmoi (this will take several minutes)..."
 chezmoi init --apply "$GITHUB_USERNAME"
-
-echo ""
-echo "✓ Setup complete!"
-echo ""
-echo "Next steps:"
-echo "  1. Restart your terminal to use Fish shell"
-echo "  2. Review installed applications in /Applications"
-echo "  3. Configure any GUI apps that were installed"
-
