@@ -28,8 +28,9 @@ echo ""
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
   # Spawn background loop to refresh sudo timestamp
+  # Note: Don't redirect stdin - sudo -v uses the cached credentials
   ( while true; do
-      sudo -v </dev/null 2>/dev/null
+      sudo -n -v 2>/dev/null || true
       sleep 40
     done ) &
 
@@ -110,7 +111,14 @@ echo ""
 echo "Step 4: Starting background sudo refresh..."
 prevent_sudo_timeout
 readonly sudo_loop_PID # Make PID readonly for security
-echo "✓ Sudo refresh started"
+
+# Give the background loop a moment to start and verify it's running
+sleep 1
+if kill -0 "$sudo_loop_PID" 2>/dev/null; then
+  echo "✓ Sudo refresh started (PID: $sudo_loop_PID)"
+else
+  echo "⚠ Warning: Sudo refresh loop may not have started properly"
+fi
 echo ""
 
 # Install remaining packages
@@ -122,15 +130,23 @@ echo ""
 echo "Step 6: Retrieving GitHub credentials from Bitwarden..."
 GITHUB_USERNAME=mehrad-meraji
 
-# Verify Bitwarden session is still valid
-if ! bw unlock --check --session "$BW_SESSION" >/dev/null 2>&1; then
-  echo "Bitwarden session expired. Please unlock again:"
+# Verify Bitwarden session is still valid by checking the status
+BW_STATUS_CHECK=$(bw status --session "$BW_SESSION" 2>/dev/null | jq -r ".status")
+if [ "$BW_STATUS_CHECK" != "unlocked" ]; then
+  echo "Bitwarden session expired or invalid. Please unlock again:"
   BW_SESSION=$(bw unlock --raw </dev/tty)
   export BW_SESSION
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
+  echo "✓ Bitwarden re-unlocked successfully"
 fi
 
-GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" </dev/null | jq -r '.fields[] | select(.name=="Token") | .value')
+GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" 2>/dev/null | jq -r '.fields[] | select(.name=="Token") | .value')
+
+if [ -z "$GITHUB_TOKEN" ]; then
+  echo "❌ Failed to retrieve GitHub token from Bitwarden"
+  exit 1
+fi
+
 echo "✓ GitHub credentials retrieved"
 echo ""
 
