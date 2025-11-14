@@ -88,23 +88,10 @@ elif [ "$BW_STATUS" == "locked" ]; then
   . "$HOME/.zshenv"
 fi
 
-eval "$(ssh-agent -s)"
-PRIVATE_SSH_KEY="private_rsa"
-PRIVATE_SSH_LOC="$HOME/.ssh/$PRIVATE_SSH_KEY"
-
-# If Private key file doesn't exist, create it from BitWarden
-if [ ! -f "$PRIVATE_SSH_LOC" ]; then
-  echo "Setting up SSH key from BitWarden..."
-  KEY=$(bw get notes f74e0e9c-51bc-440a-8870-afee00ffd9be --session "$BW_SESSION")
-  mkdir -p "$HOME/.ssh"
-  echo "$KEY" >"$PRIVATE_SSH_LOC"
-  chmod 400 "$PRIVATE_SSH_LOC"
-fi
-ssh-add --apple-use-keychain "$PRIVATE_SSH_LOC"
 
 # Get GitHub credentials from BitWarden
 GITHUB_USERNAME=mehrad-meraji
-GITHUB_TOKEN=$(bw get notes 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION")
+GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" | jq -r '.fields[] | select(.name=="Token") | .value')
 
 # Configure git credentials (git-credential-manager will be installed by chezmoi)
 git config --global credential.interactive false
