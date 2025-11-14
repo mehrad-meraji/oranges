@@ -88,13 +88,13 @@ echo "Step 3: Bitwarden Authentication"
 BW_STATUS=$(bw status | jq -r ".status")
 if [ "$BW_STATUS" == "unauthenticated" ]; then
   echo "Please log in to Bitwarden:"
-  BW_SESSION=$(bw login --raw)
+  BW_SESSION=$(bw login --raw </dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   . "$HOME/.zshenv"
   echo "✓ Bitwarden login successful"
 elif [ "$BW_STATUS" == "locked" ]; then
   echo "Please unlock Bitwarden:"
-  BW_SESSION=$(bw unlock --raw)
+  BW_SESSION=$(bw unlock --raw </dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   . "$HOME/.zshenv"
   echo "✓ Bitwarden unlocked successfully"
