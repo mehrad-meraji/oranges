@@ -71,12 +71,12 @@ brew install jq bitwarden-cli git chezmoi
 # Login to BitWarden if needed
 BW_STATUS=$(bw status | jq -r ".status")
 if [ "$BW_STATUS" == "unauthenticated" ]; then
-  BW_SESSION=$(bw login --raw)
+  BW_SESSION=$(bw login --raw </dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   # Source the updated file to get the BW_SESSION variable
   . "$HOME/.zshenv"
 elif [ "$BW_STATUS" == "locked" ]; then
-  BW_SESSION=$(bw unlock --raw)
+  BW_SESSION=$(bw unlock --raw </dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   . "$HOME/.zshenv"
 fi
