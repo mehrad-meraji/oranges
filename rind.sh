@@ -1,3 +1,6 @@
+#!/usr/bin/env bash
+set -e  # Exit on error
+
 HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/master/install.sh'
 
 touch $HOME/.zshenv
@@ -71,12 +74,16 @@ brew install jq bitwarden-cli git chezmoi
 # Login to BitWarden if needed
 BW_STATUS=$(bw status | jq -r ".status")
 if [ "$BW_STATUS" == "unauthenticated" ]; then
-  BW_SESSION=$(bw login --raw </dev/tty)
+  echo "Logging into Bitwarden..."
+  # Run bw login with stdin and stderr from tty, capture stdout
+  BW_SESSION=$(bw login --raw </dev/tty 2>/dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   # Source the updated file to get the BW_SESSION variable
   . "$HOME/.zshenv"
 elif [ "$BW_STATUS" == "locked" ]; then
-  BW_SESSION=$(bw unlock --raw </dev/tty)
+  echo "Unlocking Bitwarden..."
+  # Run bw unlock with stdin and stderr from tty, capture stdout
+  BW_SESSION=$(bw unlock --raw </dev/tty 2>/dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   . "$HOME/.zshenv"
 fi
