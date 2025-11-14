@@ -3,8 +3,6 @@ HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/maste
 touch $HOME/.zshenv
 touch $HOME/.zprofile
 
-. $HOME/.zshenv
-. $HOME/.zprofile
 
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
@@ -72,11 +70,16 @@ brew install jq bitwarden-cli git chezmoi
 
 # Login to BitWarden if needed
 BW_STATUS=$(bw status | jq -r ".status")
-if [ $BW_STATUS == "unauthenticated" ]; then
-  export BW_SESSION=$(bw login --raw)
-  echo "export BW_SESSION=$BW_SESSION" >"$HOME"/.zshenv
+if [ "$BW_STATUS" == "unauthenticated" ]; then
+  BW_SESSION=$(bw login --raw)
+  echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
+  # Source the updated file to get the BW_SESSION variable
+  . "$HOME/.zshenv"
+elif [ "$BW_STATUS" == "locked" ]; then
+  BW_SESSION=$(bw unlock --raw)
+  echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
+  . "$HOME/.zshenv"
 fi
-. "$HOME/.zshenv"
 
 eval "$(ssh-agent -s)"
 PRIVATE_SSH_KEY="private_rsa"
