@@ -75,19 +75,18 @@ brew install jq bitwarden-cli git chezmoi
 BW_STATUS=$(bw status | jq -r ".status")
 if [ "$BW_STATUS" == "unauthenticated" ]; then
   echo "Logging into Bitwarden..."
-  # Run bw login with stdin and stderr from tty, capture stdout
-  BW_SESSION=$(bw login --raw </dev/tty 2>/dev/tty)
+  # Run bw login with stdin from tty, capture stdout (the session token)
+  BW_SESSION=$(bw login --raw </dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   # Source the updated file to get the BW_SESSION variable
   . "$HOME/.zshenv"
 elif [ "$BW_STATUS" == "locked" ]; then
   echo "Unlocking Bitwarden..."
-  # Run bw unlock with stdin and stderr from tty, capture stdout
-  BW_SESSION=$(bw unlock --raw </dev/tty 2>/dev/tty)
+  # Run bw unlock with stdin from tty, capture stdout (the session token)
+  BW_SESSION=$(bw unlock --raw </dev/tty)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   . "$HOME/.zshenv"
 fi
-
 
 # Get GitHub credentials from BitWarden
 GITHUB_USERNAME=mehrad-meraji
