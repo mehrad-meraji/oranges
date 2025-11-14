@@ -6,12 +6,27 @@ HOMEBREW_INSTALLER_URL='https://raw.githubusercontent.com/Homebrew/install/maste
 touch $HOME/.zshenv
 touch $HOME/.zprofile
 
+echo "================================================"
+echo "  macOS Setup Script"
+echo "================================================"
+echo ""
+echo "This script will:"
+echo "  1. Request your sudo password"
+echo "  2. Request Bitwarden credentials (if needed)"
+echo "  3. Install Xcode Command Line Tools"
+echo "  4. Install Homebrew and essential packages"
+echo "  5. Initialize chezmoi with your dotfiles"
+echo ""
+
+# Get sudo password first
+echo "Step 1: Sudo Authentication"
+echo "Please enter your sudo password:"
+sudo -v || exit 1
+echo "✓ Sudo access granted"
+echo ""
 
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
-  echo "Please enter your sudo password to make changes to your machine"
-  sudo -v || return 1
-
   # Spawn background loop to refresh sudo timestamp
   ( while true; do
       sudo -v
@@ -28,10 +43,6 @@ prevent_sudo_timeout() {
         fi' EXIT INT TERM HUP
 }
 
-# Hack to make sure sudo caches sudo password correctly...
-# And so it stays available for the duration of the run
-prevent_sudo_timeout
-readonly sudo_loop_PID # Make PID readonly for security
 
 # Install Xcode Command Line Tools non-interactively
 if ! xcode-select -p &> /dev/null; then
@@ -67,36 +78,65 @@ fi
 
 . "$HOME/.zprofile"
 
-# Install only the absolute prerequisites needed to run chezmoi
-# Everything else (80+ packages, casks, fish, etc.) will be installed by chezmoi
-brew install jq bitwarden-cli git chezmoi
+# Install only jq and bitwarden-cli first (needed for credential setup)
+echo "Step 2: Installing jq and bitwarden-cli..."
+brew install jq bitwarden-cli
 
-# Login to BitWarden if needed
+# Login to BitWarden if needed - DO THIS BEFORE starting sudo refresh loop
+echo ""
+echo "Step 3: Bitwarden Authentication"
 BW_STATUS=$(bw status | jq -r ".status")
 if [ "$BW_STATUS" == "unauthenticated" ]; then
-  echo "Logging into Bitwarden..."
-  # Run bw login with stdin from tty, capture stdout (the session token)
-  BW_SESSION=$(bw login --raw </dev/tty)
+  echo "Please log in to Bitwarden:"
+  BW_SESSION=$(bw login --raw)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
-  # Source the updated file to get the BW_SESSION variable
   . "$HOME/.zshenv"
+  echo "✓ Bitwarden login successful"
 elif [ "$BW_STATUS" == "locked" ]; then
-  echo "Unlocking Bitwarden..."
-  # Run bw unlock with stdin from tty, capture stdout (the session token)
-  BW_SESSION=$(bw unlock --raw </dev/tty)
+  echo "Please unlock Bitwarden:"
+  BW_SESSION=$(bw unlock --raw)
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
+  . "$HOME/.zshenv"
+  echo "✓ Bitwarden unlocked successfully"
+else
+  echo "✓ Bitwarden already authenticated"
+  # Load existing session from zshenv
   . "$HOME/.zshenv"
 fi
+echo ""
 
-# Get GitHub credentials from BitWarden
+# Now start the sudo refresh loop AFTER all interactive prompts are done
+echo "Step 4: Starting background sudo refresh..."
+prevent_sudo_timeout
+readonly sudo_loop_PID # Make PID readonly for security
+echo "✓ Sudo refresh started"
+echo ""
+
+# Install remaining packages
+echo "Step 5: Installing git and chezmoi..."
+brew install git chezmoi
+echo "✓ All packages installed"
+echo ""
+
+echo "Step 6: Retrieving GitHub credentials from Bitwarden..."
 GITHUB_USERNAME=mehrad-meraji
 GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" | jq -r '.fields[] | select(.name=="Token") | .value')
+echo "✓ GitHub credentials retrieved"
+echo ""
 
 # Configure git credentials (git-credential-manager will be installed by chezmoi)
+echo "Step 7: Configuring git..."
 git config --global credential.interactive false
 git config --global credential.ghe.contoso.com.provider github
 git config --global credential.gitHubAuthModes "pat"
+echo "✓ Git configured"
+echo ""
 
 # Initialize chezmoi with private dotfiles repo
-echo "Initializing chezmoi (this will take several minutes)..."
+echo "Step 8: Initializing chezmoi with your dotfiles..."
+echo "(This will take several minutes - installing 80+ packages...)"
 chezmoi init --apply "$GITHUB_USERNAME"
+echo ""
+echo "================================================"
+echo "  ✓ Setup Complete!"
+echo "================================================"
