@@ -29,7 +29,7 @@ echo ""
 prevent_sudo_timeout() {
   # Spawn background loop to refresh sudo timestamp
   ( while true; do
-      sudo -v
+      sudo -v </dev/null
       sleep 40
     done ) &
 
@@ -124,18 +124,24 @@ GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_S
 echo "✓ GitHub credentials retrieved"
 echo ""
 
-# Configure git credentials (git-credential-manager will be installed by chezmoi)
+# Configure git credentials to use the PAT token
 echo "Step 7: Configuring git..."
+git config --global credential.helper store
 git config --global credential.interactive false
-git config --global credential.ghe.contoso.com.provider github
-git config --global credential.gitHubAuthModes "pat"
-echo "✓ Git configured"
+
+# Store the GitHub credentials so git can use them
+mkdir -p "$HOME"
+cat > "$HOME/.git-credentials" <<EOF
+https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com
+EOF
+chmod 600 "$HOME/.git-credentials"
+echo "✓ Git configured with credentials"
 echo ""
 
 # Initialize chezmoi with private dotfiles repo
 echo "Step 8: Initializing chezmoi with your dotfiles..."
 echo "(This will take several minutes - installing 80+ packages...)"
-chezmoi init --apply "$GITHUB_USERNAME" </dev/null
+chezmoi init --apply "https://github.com/${GITHUB_USERNAME}/dotfiles.git" </dev/null
 echo ""
 echo "================================================"
 echo "  ✓ Setup Complete!"
