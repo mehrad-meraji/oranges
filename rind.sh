@@ -8,14 +8,23 @@ touch $HOME/.zprofile
 
 ## Spawn sudo in background subshell to refresh the sudo timestamp
 prevent_sudo_timeout() {
-  # Note: Don't use GNU expect... just a subshell (for some reason expect spawn jacks up readline input)
   echo "Please enter your sudo password to make changes to your machine"
-  sudo -v # Asks for passwords
-  (while true; do
-    sudo -v
-    sleep 40
-  done) & # update the user's timestamp
-  export sudo_loop_PID=$!
+  sudo -v || return 1
+
+  # Spawn background loop to refresh sudo timestamp
+  ( while true; do
+      sudo -v
+      sleep 40
+    done ) &
+
+  sudo_loop_PID=$!
+  readonly sudo_loop_PID
+
+  # Trap to kill the background refresher when the script exits or is terminated
+  trap 'if [ -n "$sudo_loop_PID" ] && kill -0 "$sudo_loop_PID" 2>/dev/null; then
+          kill "$sudo_loop_PID" 2>/dev/null || true
+          wait "$sudo_loop_PID" 2>/dev/null || true
+        fi' EXIT INT TERM HUP
 }
 
 # Hack to make sure sudo caches sudo password correctly...
