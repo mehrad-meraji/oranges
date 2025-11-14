@@ -4,17 +4,40 @@ set -e  # Exit on error
 # Configuration
 GITHUB_USERNAME="${GITHUB_USERNAME:-mehrad-meraji}"
 GITHUB_ITEM_NAME="${GITHUB_ITEM_NAME:-Github Terminal Token}"
+GITHUB_REPO_RAW="https://raw.githubusercontent.com/mehrad-meraji/oranges/main/lib"
 
 # Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)" || SCRIPT_DIR="$HOME/.oranges-tmp"
 LIB_DIR="$SCRIPT_DIR/lib"
 
+# Function to source a library file (local or remote)
+source_lib() {
+  local lib_name="$1"
+  local local_path="$LIB_DIR/$lib_name"
+
+  # Try local file first
+  if [ -f "$local_path" ]; then
+    source "$local_path"
+  else
+    # Download from GitHub if running via curl
+    echo "Downloading $lib_name..."
+    local tmp_file="/tmp/oranges-$lib_name"
+    if curl -fsSL "$GITHUB_REPO_RAW/$lib_name" -o "$tmp_file" 2>/dev/null; then
+      source "$tmp_file"
+      rm -f "$tmp_file"
+    else
+      echo "❌ Failed to download $lib_name"
+      exit 1
+    fi
+  fi
+}
+
 # Source library files
-source "$LIB_DIR/sudo-keepalive.sh"
-source "$LIB_DIR/system-deps.sh"
-source "$LIB_DIR/bitwarden.sh"
-source "$LIB_DIR/git-config.sh"
-source "$LIB_DIR/chezmoi.sh"
+source_lib "sudo-keepalive.sh"
+source_lib "system-deps.sh"
+source_lib "bitwarden.sh"
+source_lib "git-config.sh"
+source_lib "chezmoi.sh"
 
 # Initialize environment files
 touch "$HOME/.zshenv"

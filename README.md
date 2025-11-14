@@ -18,10 +18,20 @@ oranges/
 
 ## Usage
 
-### Standard Usage
+### Standard Usage (Remote)
+
+When run via curl, the script automatically downloads library files from GitHub:
 
 ```bash
 curl -fsSL 'https://raw.githubusercontent.com/mehrad-meraji/oranges/refs/heads/main/rind.sh' | bash
+```
+
+### Local Usage
+
+When run locally, it uses the library files from the `lib/` directory:
+
+```bash
+./rind.sh
 ```
 
 ### With Environment Variables
@@ -83,6 +93,8 @@ RBW_EMAIL="test@example.com" GITHUB_ITEM_NAME="Test Token" ./rind.sh
 
 ## Notes
 
+- The script automatically downloads library files from GitHub when run via curl
+- When run locally, it uses the library files from the `lib/` directory
 - The script uses `rbw` (Rust Bitwarden CLI) instead of the official `bw` for better stdin handling
 - All interactive prompts are isolated to prevent conflicts with piped script execution
 - Sudo password is cached in the background to avoid repeated prompts
