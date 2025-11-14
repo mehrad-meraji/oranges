@@ -29,7 +29,7 @@ echo ""
 prevent_sudo_timeout() {
   # Spawn background loop to refresh sudo timestamp
   ( while true; do
-      sudo -v </dev/null
+      sudo -v </dev/null 2>/dev/null
       sleep 40
     done ) &
 
@@ -131,9 +131,7 @@ git config --global credential.interactive false
 
 # Store the GitHub credentials so git can use them
 mkdir -p "$HOME"
-cat > "$HOME/.git-credentials" <<EOF
-https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com
-EOF
+echo "https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com" > "$HOME/.git-credentials"
 chmod 600 "$HOME/.git-credentials"
 echo "✓ Git configured with credentials"
 echo ""
