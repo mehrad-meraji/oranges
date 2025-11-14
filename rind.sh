@@ -89,19 +89,20 @@ BW_STATUS=$(bw status | jq -r ".status")
 if [ "$BW_STATUS" == "unauthenticated" ]; then
   echo "Please log in to Bitwarden:"
   BW_SESSION=$(bw login --raw </dev/tty)
+  export BW_SESSION
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
-  . "$HOME/.zshenv"
   echo "✓ Bitwarden login successful"
 elif [ "$BW_STATUS" == "locked" ]; then
   echo "Please unlock Bitwarden:"
   BW_SESSION=$(bw unlock --raw </dev/tty)
+  export BW_SESSION
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
-  . "$HOME/.zshenv"
   echo "✓ Bitwarden unlocked successfully"
 else
   echo "✓ Bitwarden already authenticated"
   # Load existing session from zshenv
   . "$HOME/.zshenv"
+  export BW_SESSION
 fi
 echo ""
 
@@ -120,7 +121,16 @@ echo ""
 
 echo "Step 6: Retrieving GitHub credentials from Bitwarden..."
 GITHUB_USERNAME=mehrad-meraji
-GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" | jq -r '.fields[] | select(.name=="Token") | .value')
+
+# Verify Bitwarden session is still valid
+if ! bw unlock --check --session "$BW_SESSION" >/dev/null 2>&1; then
+  echo "Bitwarden session expired. Please unlock again:"
+  BW_SESSION=$(bw unlock --raw </dev/tty)
+  export BW_SESSION
+  echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
+fi
+
+GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" </dev/null | jq -r '.fields[] | select(.name=="Token") | .value')
 echo "✓ GitHub credentials retrieved"
 echo ""
 
