@@ -6,31 +6,51 @@ GITHUB_USERNAME="${GITHUB_USERNAME:-mehrad-meraji}"
 GITHUB_ITEM_NAME="${GITHUB_ITEM_NAME:-Github Terminal Token}"
 GITHUB_REPO_RAW="https://raw.githubusercontent.com/mehrad-meraji/oranges/main/lib"
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)" || SCRIPT_DIR="$HOME/.oranges-tmp"
-LIB_DIR="$SCRIPT_DIR/lib"
+# Detect if running via curl | bash (BASH_SOURCE[0] will be empty or stdin)
+if [ -z "${BASH_SOURCE[0]}" ] || [ "${BASH_SOURCE[0]}" = "bash" ] || [[ "${BASH_SOURCE[0]}" == /dev/fd/* ]]; then
+  # Running via curl | bash - use remote mode
+  REMOTE_MODE=true
+  LIB_DIR="/tmp/oranges-lib-$$"
+  mkdir -p "$LIB_DIR"
+else
+  # Running locally - use local mode
+  REMOTE_MODE=false
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  LIB_DIR="$SCRIPT_DIR/lib"
+fi
 
 # Function to source a library file (local or remote)
 source_lib() {
   local lib_name="$1"
   local local_path="$LIB_DIR/$lib_name"
 
-  # Try local file first
-  if [ -f "$local_path" ]; then
-    source "$local_path"
-  else
-    # Download from GitHub if running via curl
+  if [ "$REMOTE_MODE" = true ]; then
+    # Download from GitHub
     echo "Downloading $lib_name..."
-    local tmp_file="/tmp/oranges-$lib_name"
-    if curl -fsSL "$GITHUB_REPO_RAW/$lib_name" -o "$tmp_file" 2>/dev/null; then
-      source "$tmp_file"
-      rm -f "$tmp_file"
+    if curl -fsSL "$GITHUB_REPO_RAW/$lib_name" -o "$local_path" 2>/dev/null; then
+      source "$local_path"
     else
       echo "❌ Failed to download $lib_name"
       exit 1
     fi
+  else
+    # Use local file
+    if [ -f "$local_path" ]; then
+      source "$local_path"
+    else
+      echo "❌ Local file not found: $local_path"
+      exit 1
+    fi
   fi
 }
+
+# Cleanup function for remote mode
+cleanup_libs() {
+  if [ "$REMOTE_MODE" = true ] && [ -d "$LIB_DIR" ]; then
+    rm -rf "$LIB_DIR"
+  fi
+}
+trap cleanup_libs EXIT
 
 # Source library files
 source_lib "sudo-keepalive.sh"
