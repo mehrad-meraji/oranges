@@ -80,7 +80,7 @@ fi
 
 # Install only jq and bitwarden-cli first (needed for credential setup)
 echo "Step 2: Installing jq and bitwarden-cli..."
-brew install jq bitwarden-cli
+brew install jq bitwarden-cli </dev/null
 
 # Login to BitWarden if needed - DO THIS BEFORE starting sudo refresh loop
 echo ""
@@ -114,7 +114,7 @@ echo ""
 
 # Install remaining packages
 echo "Step 5: Installing git and chezmoi..."
-brew install git chezmoi
+brew install git chezmoi </dev/null
 echo "✓ All packages installed"
 echo ""
 
@@ -135,7 +135,7 @@ echo ""
 # Initialize chezmoi with private dotfiles repo
 echo "Step 8: Initializing chezmoi with your dotfiles..."
 echo "(This will take several minutes - installing 80+ packages...)"
-chezmoi init --apply "$GITHUB_USERNAME"
+chezmoi init --apply "$GITHUB_USERNAME" </dev/null
 echo ""
 echo "================================================"
 echo "  ✓ Setup Complete!"
