@@ -130,21 +130,24 @@ echo ""
 echo "Step 6: Retrieving GitHub credentials from Bitwarden..."
 GITHUB_USERNAME=mehrad-meraji
 
-# Verify Bitwarden session is still valid by checking the status
-BW_STATUS_CHECK=$(bw status --session "$BW_SESSION" 2>/dev/null | jq -r ".status")
-if [ "$BW_STATUS_CHECK" != "unlocked" ]; then
+# Try to get the GitHub token - if it fails, the session is invalid
+GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null | jq -r '.fields[] | select(.name=="Token") | .value' 2>/dev/null || echo "")
+
+# If we couldn't get the token, session might be expired - try to unlock
+if [ -z "$GITHUB_TOKEN" ]; then
   echo "Bitwarden session expired or invalid. Please unlock again:"
   BW_SESSION=$(bw unlock --raw </dev/tty)
   export BW_SESSION
   echo "export BW_SESSION=$BW_SESSION" >> "$HOME/.zshenv"
   echo "✓ Bitwarden re-unlocked successfully"
-fi
 
-GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" 2>/dev/null | jq -r '.fields[] | select(.name=="Token") | .value')
+  # Try again with the new session
+  GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null | jq -r '.fields[] | select(.name=="Token") | .value' 2>/dev/null || echo "")
 
-if [ -z "$GITHUB_TOKEN" ]; then
-  echo "❌ Failed to retrieve GitHub token from Bitwarden"
-  exit 1
+  if [ -z "$GITHUB_TOKEN" ]; then
+    echo "❌ Failed to retrieve GitHub token from Bitwarden"
+    exit 1
+  fi
 fi
 
 echo "✓ GitHub credentials retrieved"
