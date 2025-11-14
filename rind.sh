@@ -148,26 +148,64 @@ if [ -z "$BW_SESSION" ]; then
   exit 1
 fi
 
-# Try to get the GitHub token
-GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null | jq -r '.fields[] | select(.name=="Token") | .value' 2>/dev/null)
+# If GITHUB_TOKEN is already provided in env, prefer it and skip Bitwarden
+if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "null" ]; then
+  echo "✓ Using pre-set GITHUB_TOKEN from environment"
+else
+  # Ensure vault is synced (non-interactive)
+  bw sync --session "$BW_SESSION" >/dev/null 2>&1 || true
 
-# Check if we got the token
-if [ -z "$GITHUB_TOKEN" ] || [ "$GITHUB_TOKEN" == "null" ]; then
-  echo "❌ Failed to retrieve GitHub token from Bitwarden"
-  echo "Session may have expired. Attempting to unlock..."
-  BW_SESSION=$(bw unlock --raw </dev/tty)
-  export BW_SESSION
+  # Fetch the item JSON without interaction
+  ITEM_JSON=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null || true)
 
-  # Try again with new session
-  GITHUB_TOKEN=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null | jq -r '.fields[] | select(.name=="Token") | .value' 2>/dev/null)
+  if [ -z "$ITEM_JSON" ]; then
+    echo "Bitwarden session may be invalid. Please unlock again:"
+    BW_SESSION=$(bw unlock --raw </dev/tty)
+    export BW_SESSION
+    ITEM_JSON=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null || true)
+  fi
 
-  if [ -z "$GITHUB_TOKEN" ] || [ "$GITHUB_TOKEN" == "null" ]; then
-    echo "❌ Still failed to retrieve GitHub token. Please check your Bitwarden item ID."
+  # Try custom field named "Token" (case-insensitive)
+  TOKEN_FROM_FIELD=$(printf '%s' "$ITEM_JSON" | jq -r '((.fields // []) | map(select(((.name // "") | ascii_downcase) == "token")) | .[0].value) // empty' 2>/dev/null)
+
+  # Fallback: login.password (if item is a Login type)
+  TOKEN_FROM_LOGIN=$(printf '%s' "$ITEM_JSON" | jq -r '(.login.password // empty)' 2>/dev/null)
+
+  # Fallback: parse notes for a GitHub token pattern
+  NOTES_RAW=$(printf '%s' "$ITEM_JSON" | jq -r '(.notes // empty)' 2>/dev/null)
+  TOKEN_FROM_NOTES=""
+  if [ -n "$NOTES_RAW" ] && [ "$NOTES_RAW" != "null" ]; then
+    # Match modern and classic GitHub PAT formats
+    TOKEN_FROM_NOTES=$(printf '%s' "$NOTES_RAW" | grep -Eo 'github_pat_[A-Za-z0-9_]{80,}|gh[pousr]_[A-Za-z0-9]{36,}' | head -n1 || true)
+  fi
+
+  # Choose the first non-empty candidate
+  for CAND in "$TOKEN_FROM_FIELD" "$TOKEN_FROM_LOGIN" "$TOKEN_FROM_NOTES"; do
+    if [ -n "$CAND" ] && [ "$CAND" != "null" ]; then
+      GITHUB_TOKEN=$CAND
+      break
+    fi
+  done
+
+  # Trim whitespace/newlines just in case
+  if [ -n "$GITHUB_TOKEN" ]; then
+    GITHUB_TOKEN=$(printf '%s' "$GITHUB_TOKEN" | tr -d '\r\n ')
+  fi
+
+  if [ -z "$GITHUB_TOKEN" ] || [ "$GITHUB_TOKEN" = "null" ]; then
+    # Safe debug info (no secrets)
+    ITEM_TYPE=$(printf '%s' "$ITEM_JSON" | jq -r '.type // empty' 2>/dev/null || echo "")
+    FIELD_NAMES=$(printf '%s' "$ITEM_JSON" | jq -r '((.fields // []) | map(.name) | join(", ")) // ""' 2>/dev/null || echo "")
+    echo "❌ Failed to retrieve GitHub token from Bitwarden"
+    echo "   - Item type: ${ITEM_TYPE:-unknown}"
+    echo "   - Custom fields present: ${FIELD_NAMES:-none}"
+    echo "   Expected a custom field named 'Token' or a token in notes/login.password."
     exit 1
   fi
+
+  echo "✓ GitHub credentials retrieved"
 fi
 
-echo "✓ GitHub credentials retrieved"
 echo ""
 
 # Configure git credentials to use the PAT token
