@@ -101,21 +101,15 @@ elif [ "$BW_STATUS" == "locked" ]; then
   echo "✓ Session token captured and exported"
 else
   echo "✓ Bitwarden already authenticated"
-  # If already unlocked, get the session from bw status
-  BW_SESSION=$(bw status | jq -r '.userEmail' 2>/dev/null || echo "")
-  if [ -z "$BW_SESSION" ]; then
-    echo "⚠ Warning: Could not retrieve existing session, will prompt if needed"
-  else
-    export BW_SESSION
-  fi
+  # No need to set BW_SESSION here; Bitwarden CLI can operate without --session when unlocked
 fi
 
 # Quick test to verify the session works
 echo "Verifying Bitwarden session..."
-if bw sync --session "$BW_SESSION" >/dev/null 2>&1; then
-  echo "✓ Bitwarden session verified and ready"
+if [ -n "$BW_SESSION" ]; then
+  bw sync --session "$BW_SESSION" >/dev/null 2>&1 && echo "✓ Bitwarden session verified and ready" || echo "⚠ Warning: Session verification failed, may need to re-authenticate later"
 else
-  echo "⚠ Warning: Session verification failed, may need to re-authenticate later"
+  bw sync >/dev/null 2>&1 && echo "✓ Bitwarden is unlocked and ready" || echo "⚠ Warning: Could not verify Bitwarden state; will prompt if needed"
 fi
 echo ""
 
@@ -142,31 +136,39 @@ echo ""
 echo "Step 6: Retrieving GitHub credentials from Bitwarden..."
 GITHUB_USERNAME=mehrad-meraji
 
-# Verify BW_SESSION is set (it should be from Step 3)
-if [ -z "$BW_SESSION" ]; then
-  echo "❌ ERROR: BW_SESSION is not set. This is a bug in the script."
-  exit 1
-fi
-
 # If GITHUB_TOKEN is already provided in env, prefer it and skip Bitwarden
 if [ -n "$GITHUB_TOKEN" ] && [ "$GITHUB_TOKEN" != "null" ]; then
   echo "✓ Using pre-set GITHUB_TOKEN from environment"
 else
   # Ensure vault is synced (non-interactive)
-  bw sync --session "$BW_SESSION" >/dev/null 2>&1 || true
+  if [ -n "$BW_SESSION" ]; then
+    bw sync --session "$BW_SESSION" >/dev/null 2>&1 || true
+  else
+    bw sync >/dev/null 2>&1 || true
+  fi
 
-  # Fetch the item JSON without interaction
-  ITEM_JSON=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null || true)
+  # Build the get-item command depending on whether we have a session token
+  if [ -n "$BW_SESSION" ]; then
+    ITEM_JSON=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null || true)
+  else
+    ITEM_JSON=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --nointeraction 2>/dev/null || true)
+  fi
 
   if [ -z "$ITEM_JSON" ]; then
-    echo "Bitwarden session may be invalid. Please unlock again:"
+    echo "Bitwarden may require unlock again:"
     BW_SESSION=$(bw unlock --raw </dev/tty)
     export BW_SESSION
     ITEM_JSON=$(bw get item 1372d340-bd72-4cdf-a458-afc700e924c8 --session "$BW_SESSION" --nointeraction 2>/dev/null || true)
   fi
 
-  # Try custom field named "Token" (case-insensitive)
-  TOKEN_FROM_FIELD=$(printf '%s' "$ITEM_JSON" | jq -r '((.fields // []) | map(select(((.name // "") | ascii_downcase) == "token")) | .[0].value) // empty' 2>/dev/null)
+  # Try custom field named "Token" (case-insensitive, ignore whitespace)
+  TOKEN_FROM_FIELD=$(printf '%s' "$ITEM_JSON" | jq -r '
+    (
+      ((.fields // [])
+        | map({ name: ((.name // "") | ascii_downcase | gsub("\\s+"; "")), value: .value })
+        | map(select(.name == "token"))
+        | .[0].value)
+    ) // empty' 2>/dev/null)
 
   # Fallback: login.password (if item is a Login type)
   TOKEN_FROM_LOGIN=$(printf '%s' "$ITEM_JSON" | jq -r '(.login.password // empty)' 2>/dev/null)
