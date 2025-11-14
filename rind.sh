@@ -40,4 +40,4 @@ if [[ $(uname -m) == 'arm64' ]]; then
   /usr/sbin/softwareupdate --install-rosetta --agree-to-license
 fi
 
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "$GITHUB_USERNAME"
+chezmoi init --apply "$GITHUB_USERNAME"
